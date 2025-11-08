@@ -5,9 +5,9 @@ echo.
 REM Check if running as administrator
 net session >nul 2>&1
 if %errorLevel% == 0 (
-    echo Running with administrator privileges - OK
+    echo [OK] Running with administrator privileges
 ) else (
-    echo WARNING: Not running as administrator. Some events may not be visible.
+    echo [WARNING] Not running as administrator. Some events may not be visible.
     echo To read Security log properly, run this batch file as Administrator.
     echo.
 )
@@ -54,7 +54,7 @@ goto :end
     goto :end
 
 :invalid_param
-    echo ERROR: Invalid parameter format
+    echo [ERROR] Invalid parameter format
     echo Use '%0 help' for usage information
     goto :end
 

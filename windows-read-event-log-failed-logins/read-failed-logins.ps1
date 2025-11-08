@@ -139,35 +139,67 @@ try {
         }
     }
 
-    # Display results in text format and collect data for further processing
+    # Display results and collect data for webhook
     $eventData = ""
     foreach ($login in $failedLogins) {
+        # Display formatted event to user
+        Write-Host "=== Failed Login Event ===" -ForegroundColor Red
+        Write-Host "   Time: " -NoNewline -ForegroundColor Cyan
+        Write-Host "$($login.TimeCreated.ToString('yyyy-MM-dd HH:mm:ss'))" -ForegroundColor White
+        Write-Host "   Username: " -NoNewline -ForegroundColor Cyan
+        Write-Host "$($login.TargetUserName)" -ForegroundColor Red
+        Write-Host "   Domain: " -NoNewline -ForegroundColor Cyan
+        Write-Host "$($login.TargetDomainName)" -ForegroundColor Yellow
+        Write-Host "   Workstation: " -NoNewline -ForegroundColor Cyan
+        Write-Host "$($login.WorkstationName)" -ForegroundColor Green
+        Write-Host "   IP Address: " -NoNewline -ForegroundColor Cyan
+        Write-Host "$($login.IpAddress)" -ForegroundColor Magenta
+        Write-Host "   Logon Type: " -NoNewline -ForegroundColor Cyan
+        Write-Host "$(Get-LogonTypeDescription $login.LogonType)" -ForegroundColor Blue
+        Write-Host "   Failure Status: " -NoNewline -ForegroundColor Cyan
+        Write-Host "$(Get-NTStatusDescription $login.FailureStatus)" -ForegroundColor Red
+        Write-Host "   Sub Status: " -NoNewline -ForegroundColor Cyan
+        Write-Host "$(Get-NTStatusDescription $login.SubStatus)" -ForegroundColor Yellow
+        Write-Host "   Process Name: " -NoNewline -ForegroundColor Cyan
+        Write-Host "$($login.ProcessName)" -ForegroundColor Gray
+        Write-Host "   --------------------------------------" -ForegroundColor DarkGray
+        Write-Host ""
+
+        # Collect clean text data for webhook (without emojis and colors)
         $eventBlock = @"
 === Failed Login Event ===
-Time:           $($login.TimeCreated.ToString('yyyy-MM-dd HH:mm:ss'))
-Username:       $($login.TargetUserName)
-Domain:         $($login.TargetDomainName)
-Workstation:    $($login.WorkstationName)
-IP Address:     $($login.IpAddress)
-Logon Type:     $(Get-LogonTypeDescription $login.LogonType)
+Time: $($login.TimeCreated.ToString('yyyy-MM-dd HH:mm:ss'))
+Username: $($login.TargetUserName)
+Domain: $($login.TargetDomainName)
+Workstation: $($login.WorkstationName)
+IP Address: $($login.IpAddress)
+Logon Type: $(Get-LogonTypeDescription $login.LogonType)
 Failure Status: $(Get-NTStatusDescription $login.FailureStatus)
-Sub Status:     $(Get-NTStatusDescription $login.SubStatus)
-Process Name:   $($login.ProcessName)
+Sub Status: $(Get-NTStatusDescription $login.SubStatus)
+Process Name: $($login.ProcessName)
 ----------------------------------------
 
 "@
-        
-        Write-Host $eventBlock -ForegroundColor White
-        # Collect for further processing (webhook, email, etc.)
+
         $eventData += $eventBlock
     }
 
-    # Output collected data (can be used for webhook, email, etc.)
-    Write-Host "Collected event data:" -ForegroundColor Green
-    Write-Host $eventData -ForegroundColor Cyan
+    # Show webhook example (commented out)
+    Write-Host "Webhook Integration Example:" -ForegroundColor Green
+    Write-Host "# Copy and modify this code to send data to your webhook:" -ForegroundColor Gray
+    Write-Host @"
+<#
+# Send to webhook
+Invoke-RestMethod -Uri "https://your-webhook-url.com/webhook" -Method Post -Body (@{
+    message = `$eventData
+    title = "Failed Login Alert"
+} | ConvertTo-Json) -ContentType "application/json; charset=utf-8"
+#>
+"@ -ForegroundColor DarkGray
+
     Write-Host ""
-    Write-Host "Variable `$eventData` contains all events formatted for further processing." -ForegroundColor Yellow
-    Write-Host "You can use it for webhook, email notifications, etc." -ForegroundColor Gray
+    Write-Host "Variable `$eventData` contains all events formatted for webhook." -ForegroundColor Yellow
+    Write-Host "Use the code above to integrate with your monitoring system." -ForegroundColor Cyan
 
 } catch {
     Write-Host "Error reading event log: $($_.Exception.Message)" -ForegroundColor Red
